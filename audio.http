@@ -1,4 +1,4 @@
-POST http://localhost:3000/api/audio
+POST http://localhost:3000/api/transcribe
 Content-Type: multipart/form-data; boundary=---011000010111000001101001
 
 ---011000010111000001101001
