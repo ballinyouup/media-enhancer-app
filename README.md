@@ -59,12 +59,46 @@ Different people prefer different mediums — reading, listening, or viewing. Th
 1. Clone the repo:
 ```console
 git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>```
-2.Install dependencies:
+cd <repo-name>
+```
+2. Install dependencies:
+```console
 npm install
-# or
-yarn install
+```
 3. Add your environment variable in `.env.local`:
 ```text
 GEMINI_API_KEY=your_api_key_here
 ```
+4.Run the development server
+```console
+npm run dev
+```
+
+## 🎉 Accomplishments
+- Built a system that transforms one input into multiple outputs.  
+- Successfully demonstrated PDF → Text → AI Summary.  
+- Designed modular architecture for extending into audio, images, and video.  
+
+---
+
+## ⚠️ Challenges
+- Large PDFs and memory optimization.  
+- Summarization accuracy and prompt tuning.  
+- Handling quirks of different formats (PDF layout vs. audio pronunciation).  
+
+---
+
+## 📚 What we learned
+- Working with multiple content formats in one pipeline.  
+- How to integrate AI models into serverless functions.  
+- The importance of accessibility-first design.  
+
+---
+
+## 🔭 Roadmap
+- Add **text-to-speech (MP3)** output.  
+- Add **image/diagram generation** from extracted text.  
+- Support **video narration** and **real-time streaming**.  
+- Integrate with **cloud storage** (Google Drive, S3).  
+- Provide a **UI for uploads & downloads**.  
+
