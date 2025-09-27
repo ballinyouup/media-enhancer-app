@@ -32,10 +32,9 @@ export async function POST(request: Request) {
         const base64Audio = audioBuffer.toString('base64');
 
         // 2. Use a model that supports audio input, like gemini-1.5-flash
-        const model = genAI.chats.create({ model: 'gemini-1.5-flash' });
+        const model = genAI.chats.create({ model: 'gemini-2.5-flash' });
 
         // 3. Construct the prompt with the audio data included directly
-        const prompt = 'Please transcribe the following audio.';
         const audioPart = {
                 mimeType: file.type,
                 data: base64Audio,
@@ -44,13 +43,12 @@ export async function POST(request: Request) {
         // 4. Send the prompt and audio to Gemini in a single request
         const result = await model.sendMessage({
             message: {
-               text: prompt,
                 inlineData: audioPart,
-            }
+            },
         });
 
-
-        return NextResponse.json({ transcription: result.text });
+        const text = result.text as string
+        return NextResponse.json({ transcription: text });
     } catch (error) {
         console.error('Error processing audio:', error);
         return NextResponse.json(

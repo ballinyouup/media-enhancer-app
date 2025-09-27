@@ -1,9 +1,12 @@
-POST http://localhost:3000/api/transcribe
-Content-Type: multipart/form-data; boundary=---011000010111000001101001
+### Test for audio transcription API
 
----011000010111000001101001
+POST http://localhost:3000/api/transcribe
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
 Content-Disposition: form-data; name="audio"; filename="sample.mp3"
 Content-Type: audio/mpeg
 
-< ../../sample.mp3
----011000010111000001101001--
+< sample.mp3
+
+--boundary--
