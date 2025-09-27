@@ -4,9 +4,9 @@ POST http://localhost:3000/api/transcribe
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
-Content-Disposition: form-data; name="audio"; filename="sample.mp3"
-Content-Type: audio/mpeg
+Content-Disposition: form-data; name="link"
 
-< sample.mp3
+
+https://storage.googleapis.com/eleven-public-cdn/audio/marketing/nicole.mp3
 
 --boundary--
