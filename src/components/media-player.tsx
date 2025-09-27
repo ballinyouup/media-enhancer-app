@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -8,14 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface MediaPlayerProps {
     fileName: string
+    audioUrl?: string
 }
 
-export function MediaPlayer({ fileName }: MediaPlayerProps) {
+export function MediaPlayer({ fileName, audioUrl }: MediaPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [currentTime, setCurrentTime] = useState(0)
     const [duration, setDuration] = useState(0)
     const [volume, setVolume] = useState(75)
     const [isMuted, setIsMuted] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const audioRef = useRef<HTMLAudioElement>(null)
 
     const formatTime = (time: number) => {
         const minutes = Math.floor(time / 60)
@@ -23,37 +26,104 @@ export function MediaPlayer({ fileName }: MediaPlayerProps) {
         return `${minutes}:${seconds.toString().padStart(2, "0")}`
     }
 
-    const togglePlay = () => {
-        setIsPlaying(!isPlaying)
+    const togglePlay = async () => {
+        if (!audioRef.current || !audioUrl) return
+        
+        try {
+            if (isPlaying) {
+                audioRef.current.pause()
+                setIsPlaying(false)
+            } else {
+                await audioRef.current.play()
+                setIsPlaying(true)
+            }
+        } catch (error) {
+            console.error('Error playing audio:', error)
+        }
     }
 
     const toggleMute = () => {
-        setIsMuted(!isMuted)
+        const newMuted = !isMuted
+        setIsMuted(newMuted)
+        if (audioRef.current) {
+            audioRef.current.muted = newMuted
+        }
     }
 
     const handleProgressChange = (value: number[]) => {
-        setCurrentTime(value[0])
+        if (audioRef.current) {
+            audioRef.current.currentTime = value[0]
+            setCurrentTime(value[0])
+        }
     }
 
     const handleVolumeChange = (value: number[]) => {
-        setVolume(value[0])
+        const newVolume = value[0]
+        setVolume(newVolume)
         setIsMuted(false)
+        if (audioRef.current) {
+            audioRef.current.volume = newVolume / 100
+        }
     }
 
-    // Simulate media playback for demo
+    // Set up audio element event listeners
     useEffect(() => {
-        setDuration(180) // 3 minutes demo duration
-    }, [])
+        const audio = audioRef.current
+        if (!audio) return
 
-    useEffect(() => {
-        let interval: NodeJS.Timeout
-        if (isPlaying && currentTime < duration) {
-            interval = setInterval(() => {
-                setCurrentTime((prev) => Math.min(prev + 1, duration))
-            }, 1000)
+        const handleLoadedMetadata = () => {
+            setDuration(audio.duration)
+            setIsLoading(false)
         }
-        return () => clearInterval(interval)
-    }, [isPlaying, currentTime, duration])
+
+        const handleTimeUpdate = () => {
+            setCurrentTime(audio.currentTime)
+        }
+
+        const handleEnded = () => {
+            setIsPlaying(false)
+            setCurrentTime(0)
+        }
+
+        const handleLoadStart = () => {
+            setIsLoading(true)
+        }
+
+        const handleCanPlay = () => {
+            setIsLoading(false)
+        }
+
+        audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+        audio.addEventListener('timeupdate', handleTimeUpdate)
+        audio.addEventListener('ended', handleEnded)
+        audio.addEventListener('loadstart', handleLoadStart)
+        audio.addEventListener('canplay', handleCanPlay)
+
+        // Set initial volume
+        audio.volume = volume / 100
+        audio.muted = isMuted
+
+        return () => {
+            audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+            audio.removeEventListener('timeupdate', handleTimeUpdate)
+            audio.removeEventListener('ended', handleEnded)
+            audio.removeEventListener('loadstart', handleLoadStart)
+            audio.removeEventListener('canplay', handleCanPlay)
+        }
+    }, [audioUrl, isMuted, volume])
+
+    // Handle skip forward/backward
+    const skipForward = () => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration)
+        }
+    }
+
+    const skipBackward = () => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0)
+        }
+    }
 
     return (
         <Card className="bg-card/50 backdrop-blur-sm border-2 border-neon-purple/30 hologram-effect neon-glow vanish-in vibrate">
@@ -79,7 +149,9 @@ export function MediaPlayer({ fileName }: MediaPlayerProps) {
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="w-8 h-8 p-0 text-neon-cyan hover:text-neon-pink hover:bg-neon-cyan/10 transition-colors"
+                            onClick={skipBackward}
+                            disabled={!audioUrl}
+                            className="w-8 h-8 p-0 text-neon-cyan hover:text-neon-pink hover:bg-neon-cyan/10 transition-colors disabled:opacity-50"
                         >
                             <SkipBack className="w-4 h-4" />
                         </Button>
@@ -88,15 +160,24 @@ export function MediaPlayer({ fileName }: MediaPlayerProps) {
                             size="sm"
                             variant="ghost"
                             onClick={togglePlay}
-                            className="w-10 h-10 p-0 text-neon-cyan hover:text-neon-pink hover:bg-neon-cyan/10 transition-colors border border-neon-cyan/30 rounded-full"
+                            disabled={!audioUrl || isLoading}
+                            className="w-10 h-10 p-0 text-neon-cyan hover:text-neon-pink hover:bg-neon-cyan/10 transition-colors border border-neon-cyan/30 rounded-full disabled:opacity-50"
                         >
-                            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
+                            ) : isPlaying ? (
+                                <Pause className="w-5 h-5" />
+                            ) : (
+                                <Play className="w-5 h-5 ml-0.5" />
+                            )}
                         </Button>
 
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="w-8 h-8 p-0 text-neon-cyan hover:text-neon-pink hover:bg-neon-cyan/10 transition-colors"
+                            onClick={skipForward}
+                            disabled={!audioUrl}
+                            className="w-8 h-8 p-0 text-neon-cyan hover:text-neon-pink hover:bg-neon-cyan/10 transition-colors disabled:opacity-50"
                         >
                             <SkipForward className="w-4 h-4" />
                         </Button>
@@ -108,9 +189,10 @@ export function MediaPlayer({ fileName }: MediaPlayerProps) {
                         <div className="flex-1">
                             <Slider
                                 value={[currentTime]}
-                                max={duration}
+                                max={duration || 100}
                                 step={1}
                                 onValueChange={handleProgressChange}
+                                disabled={!audioUrl}
                                 className="w-full [&_[role=slider]]:bg-neon-cyan [&_[role=slider]]:border-neon-cyan [&_.bg-primary]:bg-neon-cyan"
                             />
                         </div>
@@ -138,6 +220,16 @@ export function MediaPlayer({ fileName }: MediaPlayerProps) {
                         </div>
                     </div>
                 </div>
+                
+                {/* Hidden audio element */}
+                {audioUrl && (
+                    <audio
+                        ref={audioRef}
+                        src={audioUrl}
+                        preload="metadata"
+                        className="hidden"
+                    />
+                )}
             </CardContent>
         </Card>
     )

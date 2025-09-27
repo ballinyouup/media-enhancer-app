@@ -1,12 +1,10 @@
 
-// Note: The current recommended package is @google/generative-ai
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 
 const apiKey = process.env.GEMINI_API_KEY as string;
-const genAI = new GoogleGenAI({
-    apiKey: apiKey,
-});
+const ai = new GoogleGenAI({ apiKey: apiKey });
+const MODEL_ID = "gemini-2.5-pro";
 
 export async function POST(request: Request) {
     if (!apiKey) {
@@ -18,37 +16,45 @@ export async function POST(request: Request) {
 
     try {
         const formData = await request.formData();
-        const file = formData.get('audio') as File | null;
-
-        if (!file) {
+        const AUDIO_URL = formData.get('link') as string | null;
+        if(!AUDIO_URL) {
             return NextResponse.json(
                 { error: 'No audio file uploaded.' },
                 { status: 400 }
             );
         }
-
-        // 1. Convert the audio file to a Buffer, then to a base64 string
-        const audioBuffer = Buffer.from(await file.arrayBuffer());
-        const base64Audio = audioBuffer.toString('base64');
-
-        // 2. Use a model that supports audio input, like gemini-1.5-flash
-        const model = genAI.chats.create({ model: 'gemini-2.5-flash' });
-
-        // 3. Construct the prompt with the audio data included directly
-        const audioPart = {
-                mimeType: file.type,
-                data: base64Audio,
-        };
-
-        // 4. Send the prompt and audio to Gemini in a single request
-        const result = await model.sendMessage({
-            message: {
-                inlineData: audioPart,
-            },
+        // First, upload the file to Gemini's file API
+        const audioResponse = await fetch(AUDIO_URL);
+        if (!audioResponse.ok) {
+            return NextResponse.json(
+                { error: 'Failed to fetch audio from URL' },
+                { status: 400 }
+            );
+        }
+        
+        const audioBlob = await audioResponse.blob();
+        
+        // Upload file to Gemini's file API
+        const uploadResult = await ai.files.upload({
+            file: audioBlob,
+        });
+        
+        // Now use the uploaded file URI
+        const response = await ai.models.generateContent({
+            model: MODEL_ID,
+            contents: [
+                {
+                    fileData: {
+                        mimeType: "audio/mpeg",
+                        fileUri: uploadResult.uri
+                    }
+                },
+                "Please transcribe this audio file. Provide only the transcription text without any additional commentary."
+            ]
         });
 
-        const text = result.text as string
-        return NextResponse.json({ transcription: text });
+
+        return NextResponse.json({ transcription: response.text });
     } catch (error) {
         console.error('Error processing audio:', error);
         return NextResponse.json(
