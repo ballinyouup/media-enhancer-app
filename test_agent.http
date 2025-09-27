@@ -1,0 +1,47 @@
+
+#curl -X POST localhost:8000/run \
+#-H "Content-Type: application/json" \
+#-d '{
+#"app_name": "multi_tool_agent",
+#"user_id": "u_123",
+#"session_id": "s_123",
+#"new_message": {
+#    "role": "user",
+#    "parts": [{
+#    "text": "Hey my name is Bryan."
+#    }]
+#}
+#}'
+POST localhost:8000/run
+Content-Type: application/json
+
+{
+  "app_name": "multi_tool_agent",
+  "user_id": "u_123",
+  "session_id": "s_123",
+  "new_message": {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Hey my name is Bryan."
+      }
+    ]
+  }
+}
+
+###
+
+# curl -X POST http://localhost:8000/apps/multi_tool_agent/users/u_123/sessions/s_123
+#  -H "Content-Type: application/json"
+#  -d '{"state": {"key1": "value1", "key2": 42}}'
+POST http://localhost:8000/apps/multi_tool_agent/users/u_123/sessions/s_123
+Content-Type: application/json
+
+{
+  "state": {
+    "key1": "value1",
+    "key2": 42
+  }
+}
+
+###
