@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
+export const runtime = 'edge';
+
 // Environment variables
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GOOGLE_CLOUD_PROJECT = process.env.GOOGLE_CLOUD_PROJECT;
-const GOOGLE_CLOUD_LOCATION = process.env.GOOGLE_CLOUD_LOCATION;
-const GOOGLE_GENAI_USE_VERTEXAI = process.env.GOOGLE_GENAI_USE_VERTEXAI === 'true';
+
 
 // Type definitions
 interface TranscriptionResponse {
@@ -19,6 +19,17 @@ interface AudioData {
     data: string;
     mimeType: string;
   };
+}
+
+// Helper function to convert ArrayBuffer to Base64
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 // Helper function to determine MIME type based on file extension or Content-Type
@@ -48,13 +59,7 @@ function getMimeType(fileName?: string, contentType?: string): string {
 // Function to transcribe audio using Google GenAI
 async function transcribeAudio(audioData: AudioData): Promise<string> {
   try {
-    const ai = GOOGLE_GENAI_USE_VERTEXAI 
-      ? new GoogleGenAI({
-          vertexai: true,
-          project: GOOGLE_CLOUD_PROJECT,
-          location: GOOGLE_CLOUD_LOCATION,
-        })
-      : new GoogleGenAI({
+    const ai = new GoogleGenAI({
           vertexai: false,
           apiKey: GEMINI_API_KEY
         });
@@ -84,13 +89,7 @@ async function transcribeAudio(audioData: AudioData): Promise<string> {
 // Function to transcribe audio with streaming
 async function transcribeAudioStream(audioData: AudioData): Promise<string> {
   try {
-    const ai = GOOGLE_GENAI_USE_VERTEXAI 
-      ? new GoogleGenAI({
-          vertexai: true,
-          project: GOOGLE_CLOUD_PROJECT,
-          location: GOOGLE_CLOUD_LOCATION,
-        })
-      : new GoogleGenAI({
+    const ai = new GoogleGenAI({
           vertexai: false,
           apiKey: GEMINI_API_KEY
         });
@@ -122,19 +121,8 @@ async function transcribeAudioStream(audioData: AudioData): Promise<string> {
 export async function POST(request: NextRequest): Promise<NextResponse<TranscriptionResponse>> {
   try {
     // Validate environment variables
-    if (!GEMINI_API_KEY && !GOOGLE_GENAI_USE_VERTEXAI) {
-      return NextResponse.json(
-        { success: false, error: 'GEMINI_API_KEY is required when not using Vertex AI' },
-        { status: 500 }
-      );
-    }
 
-    if (GOOGLE_GENAI_USE_VERTEXAI && (!GOOGLE_CLOUD_PROJECT || !GOOGLE_CLOUD_LOCATION)) {
-      return NextResponse.json(
-        { success: false, error: 'GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION are required for Vertex AI' },
-        { status: 500 }
-      );
-    }
+
 
     // Parse form data to get the audio file
     const formData = await request.formData();
@@ -159,7 +147,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<Transcrip
 
     // Convert file to base64
     const arrayBuffer = await audioFile.arrayBuffer();
-    const base64Audio = Buffer.from(arrayBuffer).toString('base64');
+    const base64Audio = arrayBufferToBase64(arrayBuffer);
     const mimeType = getMimeType(audioFile.name, audioFile.type);
 
     const audioData: AudioData = {
