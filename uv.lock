@@ -371,6 +371,15 @@ wheels = [
 ]
 
 [[package]]
+name = "file"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cffi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/49/317ac8ed10afb25c4c24972ea4de4c5507d6b0ab13bca4941c9a0bdc64ea/file-0.3.0.tar.gz", hash = "sha256:02735d18e92a13dd8335aee2373ffbe41444b2c42091d03b75dd2633121c46f4", size = 15840, upload-time = "2017-11-03T01:15:02.62Z" }
+
+[[package]]
 name = "google-adk"
 version = "1.15.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1174,11 +1183,15 @@ name = "media-enhancer-app"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "file" },
     { name = "google-adk" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "google-adk", specifier = ">=1.15.1" }]
+requires-dist = [
+    { name = "file", specifier = ">=0.3.0" },
+    { name = "google-adk", specifier = ">=1.15.1" },
+]
 
 [[package]]
 name = "numpy"

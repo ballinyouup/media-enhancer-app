@@ -4,5 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.10"
 dependencies = [
+    "file>=0.3.0",
     "google-adk>=1.15.1",
+    "pypdf2>=3.0.0",
 ]
