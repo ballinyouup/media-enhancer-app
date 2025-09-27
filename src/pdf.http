@@ -1,0 +1,17 @@
+### Test for PDF summarization API
+
+POST http://localhost:3000/api/pdf
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="pdf"; filename="28_SHORT_POEMS_&_PROSE_POEMS_by_REVERDY.pdf"
+Content-Type: application/pdf
+
+< ../../28_SHORT_POEMS_&_PROSE_POEMS_by_REVERDY.pdf
+
+--boundary--
+
+###
+# Ensure that you have a .env.local file in the root of your project with the following content:
+# GEMINI_API_KEY=your_api_key
+###
