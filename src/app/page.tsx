@@ -1,103 +1,287 @@
-import Image from "next/image";
+"use client"
+
+import { useState } from "react"
+import { FileUploadZone } from "@/components/file-upload-zone"
+import { PromptInput } from "@/components/prompt-input"
+import { MediaPlayer } from "@/components/media-player"
+import { VideoPlayer } from "@/components/video-player"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+interface UploadedFile {
+    id: string
+    name: string
+    size: number
+    type: string
+    url?: string
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+    const [isProcessing, setIsProcessing] = useState(false)
+    const [generatedFile, setGeneratedFile] = useState<UploadedFile | null>(null)
+    const [showVanishEffect, setShowVanishEffect] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    const handlePromptSubmit = async (prompt: string, files: File[]) => {
+        setIsProcessing(true)
+
+        // Convert File objects to UploadedFile format and add to upload zone
+        if (files.length > 0) {
+            const newUploadedFiles = files.map((file) => ({
+                id: Math.random().toString(36).substr(2, 9),
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                url: URL.createObjectURL(file),
+            }))
+
+            // Add new files to existing uploaded files
+            setUploadedFiles((prev) => [...prev, ...newUploadedFiles])
+        }
+
+        // Simulate processing
+        setTimeout(() => {
+            setIsProcessing(false)
+        }, 2000)
+    }
+
+    const handleFilesChange = (files: UploadedFile[]) => {
+        setUploadedFiles(files)
+        if (files.length === 0) {
+            setGeneratedFile(null)
+        }
+    }
+
+    const handleGenerate = (file: UploadedFile) => {
+        setShowVanishEffect(true)
+        setGeneratedFile(file)
+
+        // Reset vanish effect after animation completes
+        setTimeout(() => {
+            setShowVanishEffect(false)
+        }, 2500)
+    }
+
+    const getFileCategory = (type: string) => {
+        if (type.startsWith("image/")) return "image"
+        if (type.startsWith("video/")) return "video"
+        if (type.startsWith("audio/")) return "audio"
+        if (type === "application/pdf") return "pdf"
+        if (type.startsWith("text/") || type === "application/json" || type === "application/javascript") return "text"
+        return "other"
+    }
+
+    const renderFileViewer = (file: UploadedFile) => {
+        const category = getFileCategory(file.type)
+
+        switch (category) {
+            case "image":
+                return (
+                    <img
+                        src={file.url || "/placeholder.svg"}
+                        alt={file.name}
+                        className="w-full h-full object-contain rounded-b-lg"
+                    />
+                )
+
+            case "video":
+                return (
+                    <video src={file.url} controls className="w-full h-full rounded-b-lg" style={{ maxHeight: "100%" }}>
+                        Your browser does not support the video tag.
+                    </video>
+                )
+
+            case "audio":
+                return (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-center space-y-4">
+                            <div className="w-16 h-16 mx-auto bg-neon-cyan/20 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-neon-cyan rounded-full animate-pulse"></div>
+                            </div>
+                            <audio src={file.url} controls className="w-full max-w-md">
+                                Your browser does not support the audio tag.
+                            </audio>
+                            <p className="text-neon-cyan font-mono text-sm">{file.name}</p>
+                        </div>
+                    </div>
+                )
+
+            case "pdf":
+                return <iframe src={file.url} className="w-full h-full rounded-b-lg" title={`PDF Viewer - ${file.name}`} />
+
+            case "text":
+                return (
+                    <iframe
+                        src={file.url}
+                        className="w-full h-full rounded-b-lg bg-background/90"
+                        title={`Text Viewer - ${file.name}`}
+                    />
+                )
+
+            default:
+                return (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-center space-y-4">
+                            <div className="w-16 h-16 mx-auto border-2 border-dashed border-neon-purple/50 rounded-lg flex items-center justify-center">
+                                <div className="w-8 h-8 bg-neon-purple/20 rounded animate-pulse"></div>
+                            </div>
+                            <p className="text-neon-purple font-mono text-sm">{file.name}</p>
+                            <p className="text-neon-cyan/70 font-mono text-xs">File type: {file.type}</p>
+                            <p className="text-neon-pink/70 font-mono text-xs">Size: {(file.size / 1024).toFixed(1)} KB</p>
+                            <a
+                                href={file.url}
+                                download={file.name}
+                                className="inline-block px-4 py-2 bg-neon-purple/20 border border-neon-purple/50 rounded text-neon-purple font-mono text-xs hover:bg-neon-purple/30 transition-colors"
+                            >
+                                DOWNLOAD_FILE
+                            </a>
+                        </div>
+                    </div>
+                )
+        }
+    }
+
+    return (
+        <div className="min-h-screen relative overflow-hidden">
+            <div className="absolute inset-0 cyber-grid opacity-30"></div>
+            <div className="flowing-line" style={{ top: "10%", left: "10%" }}></div>
+            <div className="flowing-line" style={{ top: "30%", left: "60%" }}></div>
+            <div className="flowing-line" style={{ top: "60%", left: "20%" }}></div>
+            <div className="flowing-line" style={{ top: "80%", left: "70%" }}></div>
+
+            <div className={`container mx-auto px-4 py-8 relative z-10 ${generatedFile ? "max-w-7xl" : "max-w-4xl"}`}>
+                <div className="text-center mb-12">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <h1 className="text-4xl font-bold text-balance bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-black">
+                            NEURAL INTERFACE
+                        </h1>
+                    </div>
+                    <p className="text-neon-cyan text-pretty font-mono tracking-wider">{"> INITIALIZE QUANTUM PROMPT SYSTEM_"}</p>
+                    <div className="mt-4 h-px bg-gradient-to-r from-transparent via-neon-purple to-transparent"></div>
+                </div>
+
+                <div className={`flex gap-8 ${generatedFile ? "flex-row" : "justify-center"}`}>
+                    {generatedFile && (
+                        <div className="flex-1">
+                            <Card className="bg-card/50 backdrop-blur-sm border-2 border-neon-cyan/30 hologram-effect neon-glow h-[600px]">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-neon-cyan font-mono">
+                                        <div className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"></div>
+                                        FILE VIEWER
+                                        <div className="w-2 h-2 bg-neon-pink rounded-full animate-pulse"></div>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="h-full p-0">
+                                    {generatedFile.url ? (
+                                        renderFileViewer(generatedFile)
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-neon-purple font-mono">
+                                            <p>File preview not available</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+
+                    <div className={generatedFile ? "flex-1 max-w-md" : "max-w-2xl"}>
+                        <Card className="mb-8 bg-card/50 backdrop-blur-sm border-2 border-neon-purple/30 hologram-effect neon-glow">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-neon-cyan font-mono">
+                                    <div className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"></div>
+                                    FILE UPLOAD
+                                    <div className="w-2 h-2 bg-neon-pink rounded-full animate-pulse"></div>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <FileUploadZone
+                                    onFilesChange={handleFilesChange}
+                                    onGenerate={handleGenerate}
+                                    maxFiles={5}
+                                    initialFiles={uploadedFiles}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        {generatedFile && (
+                            <div className={`mb-8 ${showVanishEffect ? "vanish-in vanish-particles" : ""}`}>
+                                {showVanishEffect && (
+                                    <>
+                                        <div className="dust-particle"></div>
+                                        <div className="dust-particle"></div>
+                                        <div className="dust-particle"></div>
+                                    </>
+                                )}
+                                <VideoPlayer
+                                    fileName={generatedFile.name}
+                                    videoUrl={generatedFile.type.startsWith("video/") ? generatedFile.url : undefined}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {generatedFile && (
+                        <div className={`flex-1 ${showVanishEffect ? "vanish-in vanish-particles" : ""}`}>
+                            {showVanishEffect && (
+                                <>
+                                    <div className="dust-particle"></div>
+                                    <div className="dust-particle"></div>
+                                    <div className="dust-particle"></div>
+                                </>
+                            )}
+                            <Card className="bg-card/50 backdrop-blur-sm border-2 border-neon-pink/30 hologram-effect neon-glow h-[600px]">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-neon-pink font-mono">
+                                        <div className="w-2 h-2 bg-neon-pink rounded-full animate-pulse"></div>
+                                        FILE PLACEHOLDER
+                                        <div className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"></div>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="h-full flex items-center justify-center">
+                                    <div className="text-center space-y-4">
+                                        <div className="w-16 h-16 mx-auto border-2 border-dashed border-neon-pink/50 rounded-lg flex items-center justify-center">
+                                            <div className="w-8 h-8 bg-neon-pink/20 rounded animate-pulse"></div>
+                                        </div>
+                                        <p className="text-neon-pink font-mono text-sm">FILE_PLACEHOLDER_READY</p>
+                                        <div className="text-xs text-neon-cyan/70 font-mono">{">"} AWAITING_DATA_STREAM</div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                </div>
+
+                {generatedFile && (
+                    <div className={`mt-8 ${showVanishEffect ? "vanish-in vanish-particles" : ""}`}>
+                        {showVanishEffect && (
+                            <>
+                                <div className="dust-particle"></div>
+                                <div className="dust-particle"></div>
+                                <div className="dust-particle"></div>
+                            </>
+                        )}
+                        <MediaPlayer fileName="Audio Stream Ready" />
+                    </div>
+                )}
+
+                <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md border-t-2 border-neon-cyan/30 p-4">
+                    <div className="container mx-auto max-w-4xl">
+                        <div className="mb-2 flex items-center gap-2 text-xs text-neon-cyan font-mono">
+                            <div className="w-1 h-1 bg-neon-cyan rounded-full animate-pulse"></div>
+                            QUANTUM_TERMINAL_v2.1.0
+                            <div className="flex-1 h-px bg-gradient-to-r from-neon-cyan/50 to-transparent"></div>
+                            <span className="text-neon-pink">READY</span>
+                        </div>
+                        <PromptInput
+                            onSubmit={handlePromptSubmit}
+                            placeholder="> Enter neural command sequence..."
+                            loading={isProcessing}
+                        />
+                    </div>
+                </div>
+
+                {/* Bottom spacing to account for fixed input */}
+                <div className="h-40" />
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    )
 }
