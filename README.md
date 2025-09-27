@@ -100,5 +100,22 @@ npm run dev
 - Add **image/diagram generation** from extracted text.  
 - Support **video narration** and **real-time streaming**.  
 - Integrate with **cloud storage** (Google Drive, S3).  
-- Provide a **UI for uploads & downloads**.  
+- Provide a **UI for uploads & downloads**.
+---
+## 🎯 Goals
+
+- Make one input accessible across **multiple formats** (PDF, audio, images).
+- Improve **accessibility** for people with different needs (visual, auditory, cognitive).
+- Enable **low-bandwidth** and **offline-friendly** distribution (smaller, targeted outputs).
+- Provide **education-ready** content (summaries, study notes, slides).
+- Offer **plug-and-play modules** so others can extend the pipeline (TTS, diagrams, video).
+- Keep it **open-source**, documented, and easy to adopt.
+---
+## 🌍 How this fits: AI for Good — Helping Humanity
+
+- **Accessibility & Inclusion:** Converts the same content into formats that serve screen-reader users, language learners, and people on the go.
+- **Equity of Access:** Lowers friction for communities with constrained devices or connectivity by generating lightweight alternatives (text, compressed audio).
+- **Education & Literacy:** Produces clear summaries and multimodal learning aids that support students and lifelong learners.
+- **Crisis & Public Info:** Supports rapid reformatting of guidance (health, safety, disaster updates) into readable, audible, and visual versions.
+- **Sustainable Use of AI:** Promotes **right-sized** outputs (only what’s needed, when it’s needed) to reduce unnecessary compute and storage.
 
