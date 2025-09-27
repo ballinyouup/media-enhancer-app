@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+📄 Multi-Part Input Distribution
 
-## Getting Started
+Transform a single input into multiple outputs — PDFs, audio (MP3), images, and more.
+This repo demonstrates how one uploaded file (like a PDF) can be processed, split, and redistributed into multiple formats using modern tooling.
 
-First, run the development server:
+🚀 Inspiration
 
-```bash
+This project came from the idea that one format doesn’t fit all. Some people prefer reading, others listening, and sometimes visuals make information easier to grasp. By distributing one input across different formats, the same content becomes more accessible, versatile, and engaging.
+
+💡 What it does
+
+Accepts an uploaded input file (currently PDFs).
+
+Extracts and processes the content.
+
+Generates outputs across multiple modalities:
+
+Summarized PDF text.
+
+Audio (MP3) narration (future).
+
+Image visualizations (future).
+
+Currently, the implementation focuses on PDF summarization using Google’s Gemini API.
+
+🛠️ How we built it
+
+Framework: Next.js
+ serverless functions.
+
+PDF Parsing: pdf-parse
+.
+
+AI Processing: Google GenAI
+ (gemini-2.5-flash model).
+
+Flow:
+
+Upload a PDF via form data.
+
+Convert the PDF into a buffer.
+
+Extract the raw text using pdf-parse.
+
+Send extracted text to Gemini for summarization.
+
+Return a clean, JSON-formatted summary.
+
+⚠️ Challenges we ran into
+
+Handling large PDFs while avoiding memory issues.
+
+Ensuring the summarization remained faithful to the source.
+
+Integrating different formats without breaking the pipeline.
+
+Keeping the system responsive while processing multiple outputs.
+
+🎉 Accomplishments we’re proud of
+
+Successfully built a pipeline where one input leads to multiple outputs.
+
+Seamless PDF → AI Summary flow.
+
+Designed a structure that can scale into audio, visuals, and real-time distribution.
+
+📚 What we learned
+
+How to work with multiple content formats in one pipeline.
+
+The power of parallel processing and modular design.
+
+The importance of accessibility-first thinking when designing tools.
+
+🔮 What’s next for Multi-Part Input Distribution
+
+✅ Support for audio narration (MP3).
+
+✅ Image/diagram generation from extracted text.
+
+🔄 Real-time streaming, so summaries/audio/visuals are created while content is still uploading.
+
+☁️ Cloud integration to auto-save outputs into Google Drive or similar.
+
+📊 User customization — let users choose which formats they want.
+
+🧑‍💻 Usage
+1. Install dependencies
+npm install
+
+2. Add your API key
+
+Create a .env.local file in the root of your project:
+
+GEMINI_API_KEY=your_api_key_here
+
+3. Run the project
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Send a request
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+POST a PDF file to the route:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+curl -X POST http://localhost:3000/api/pdf \
+  -F "pdf=@yourfile.pdf"
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+Expected response:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+{
+  "summary": "This document discusses..."
+}
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+📂 Tech Stack
 
-## Deploy on Vercel
+Frontend/Backend: Next.js
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+AI Models: Google Gemini (2.5-flash)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Parsing: pdf-parse
+
+Output: JSON, with future support for PDF/MP3/Image
