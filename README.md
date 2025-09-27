@@ -51,3 +51,20 @@ Different people prefer different mediums — reading, listening, or viewing. Th
 ├─ package.json
 ├─ README.md
 └─ .env.local
+```
+
+---
+## ⚙️ Installation
+
+1. Clone the repo:
+```bash
+git clone https://github.com/<your-username>/<repo-name>.git
+cd <repo-name>'''
+2.Install dependencies:
+npm install
+# or
+yarn install
+3. Add your environment variable in `.env.local`:
+```text
+GEMINI_API_KEY=your_api_key_here
+```
