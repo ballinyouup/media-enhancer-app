@@ -57,9 +57,9 @@ Different people prefer different mediums — reading, listening, or viewing. Th
 ## ⚙️ Installation
 
 1. Clone the repo:
-```bash
+```console
 git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>'''
+cd <repo-name>```
 2.Install dependencies:
 npm install
 # or
